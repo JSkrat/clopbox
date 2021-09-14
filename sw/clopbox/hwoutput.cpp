@@ -1,7 +1,7 @@
 #include "hwoutput.h"
 
-HwOutput::HwOutput(QObject *parent, const float powerFactor, const TTime startTime, const TPower startPower, const TPower minimalPower) :
-    QObject(parent), powerFactor(powerFactor), startTime(startTime), startPower(startPower), minimalPower(minimalPower)
+HwOutput::HwOutput(QObject *parent, const float powerFactor, const float startTime, const TPower startPower, const TPower minimalPower) :
+    QObject(parent), powerFactor(powerFactor), startTime(startTime*1000), startPower(startPower), minimalPower(minimalPower)
 {
     this->currentPower = 0;
     this->targetPower = 0;

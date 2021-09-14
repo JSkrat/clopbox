@@ -10,6 +10,7 @@
 #include <iostream>
 #include <QVariant>
 #include "exceptions.h"
+#include "hwoutput.h"
 
 typedef enum {
     ufEcho = 0,
@@ -53,13 +54,13 @@ HwControl::HwControl(QObject *parent) : QObject(parent), serial(this)
         this->_outputs[i] = {
             .name = output["name"].toString(),
             .enabled = output["enabled"].toBool(),
-            .powerFactor = output["power factor"].toFloat(),
-            .minPower = output["minimal power"].toInt(),
-            .startPower = output["start power"].toInt(),
-            .startTime = output["start time"].toFloat(),
-            // runtime fields
-            .power = 0,
-            .starting = false,
+            .output = new HwOutput(
+                this,
+                output["power factor"].toFloat(),
+                output["start time"].toFloat(),
+                output["start power"].toInt(),
+                output["minimal power"].toInt()
+            )
         };
         i++;
     }

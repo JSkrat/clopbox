@@ -5,7 +5,7 @@
 #include <QElapsedTimer>
 #include <QMutex>
 
-typedef qint64 TTime;
+typedef qint64 TTime; // milliseconds
 typedef int TPower;
 
 class HwOutput : public QObject
@@ -20,7 +20,7 @@ public:
     const TTime startTime;
     const TPower startPower; // engine starts rotating from all the positions at that power
     const TPower minimalPower; // below that engine stops
-    explicit HwOutput(QObject *parent = nullptr, const float powerFactor, const TTime startTime, const TPower startPower, const TPower minimalPower);
+    explicit HwOutput(QObject *parent = nullptr, const float powerFactor, const float startTime, const TPower startPower, const TPower minimalPower);
 
     int calculateNextStep(const TTime timePassed);
     /// low-level function to set the output power.

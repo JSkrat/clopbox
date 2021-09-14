@@ -4,20 +4,14 @@
 #include <QObject>
 #include "serialthread.h"
 #include <QTime>
+#include "hwoutput.h"
 
 #define OUTPUT_NUM 8
 
 typedef struct {
     QString name;
     bool enabled;
-    float powerFactor; // affects only input power, all other parameters use raw power
-    int minPower;
-    int startPower;
-    float startTime; // in seconds
-    // runtime fields
-    int power;
-    bool starting;
-    QTime started;
+    HwOutput *output;
 } sOutput;
 
 class HwControl : public QObject
