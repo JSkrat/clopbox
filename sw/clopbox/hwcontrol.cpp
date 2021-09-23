@@ -12,16 +12,6 @@
 #include "exceptions.h"
 #include "hwoutput.h"
 
-typedef enum {
-    ufEcho = 0,
-    ufVersion = 1,
-
-    ufResetOutputs = 0x10,
-    ufSetOutput = 0x12,
-    ufGetOutputs = 0x15,
-    ufSetOutputWithTimeout = 0x16,
-} eUARTFunction;
-
 
 void HwControl::_validateOutputNumber(int outputNumber)
 {
@@ -54,6 +44,8 @@ HwControl::HwControl(QObject *parent) : QObject(parent), serial(this)
         this->_outputs[i] = {
             .name = output["name"].toString(),
             .enabled = output["enabled"].toBool(),
+            .lastOutput = 0,
+            .hwOutput = 0,
             .output = new HwOutput(
                 this,
                 output["power factor"].toFloat(),
@@ -64,20 +56,23 @@ HwControl::HwControl(QObject *parent) : QObject(parent), serial(this)
         };
         i++;
     }
+    this->_outputUpdateTime.start();
+    // one period of the device is 64ms, but to avoid interference patters let's peek couple times smaller
+    this->_outputUpdateTimer.setInterval(16);
+    connect(&(this->_outputUpdateTimer), &QTimer::timeout, this, &HwControl::outputUpdate);
 }
 
 float HwControl::getOutput(int outputNumber)
 {
     this->_validateOutputNumber(outputNumber);
-    return static_cast<float>(this->_outputs[outputNumber].power) / this->_outputs[outputNumber].powerFactor;
+    return static_cast<float>(this->_outputs[outputNumber].output->currentRawPower()) /
+            this->_outputs[outputNumber].output->powerFactor;
 }
 
 void HwControl::setOutput(int outputNumber, float power)
 {
     this->_validateOutputNumber(outputNumber);
-    const int desiredPower = power * this->_outputs[outputNumber].powerFactor;
-    // do we need to engage startup sequence?
-    if (desiredPower < this->_outputs[outputNumber].startPower && this->_outputs[outputNumber].)
+    this->_outputs[outputNumber].output->setPower(power);
 }
 
 void HwControl::serialResponse(const uint8_t command, const uint8_t code, const QByteArray &response)
@@ -87,8 +82,12 @@ void HwControl::serialResponse(const uint8_t command, const uint8_t code, const 
     case ufGetOutputs: {
         if (8 != response.length()) return;
         for (int i = 0; i < response.length(); i++) {
-//            this->outputs[i].bar->setValue(response[i]);
+            this->_outputs[i].hwOutput = response[i];
         }
+        break;
+    }
+    case ufSetOutputs: {
+
         break;
     }
     case ufResetOutputs: {
@@ -114,4 +113,22 @@ void HwControl::serialTimeout(const QString &message)
 void HwControl::serialError(const QString &message)
 {
 
+}
+
+void HwControl::outputUpdate()
+{
+    // command length is 12 bytes, it is 120 bits, it is 1.042ms@115200
+    QByteArray outputs;
+    for (int i = 0; i < OUTPUT_NUM; i++) {
+        TPower output = this->_outputs[i].output->calculateNextStep(this->_outputUpdateTime.restart());
+        outputs.append(output);
+        this->_outputs[i].lastOutput = output;
+    }
+    this->serialTransaction(ufSetOutputs, outputs);
+}
+
+void HwControl::serialTransaction(eUARTFunction command, QByteArray data)
+{
+    data.prepend(command);
+    this->serial.transaction(this->portName, this->uartTimeout, data);
 }
