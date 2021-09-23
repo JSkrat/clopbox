@@ -39,21 +39,22 @@ ISR(TIMER2_COMPA_vect) {
 	if (64 <= phase) {
 		phase = 0;
 		// decrement once per period, so it is a milliseconds
-		for (int i = 0; i < output_num; i++) {
+		// TODO it appears it is once per 64ms, so it is in 64ms chunks
+		/*for (int i = 0; i < output_num; i++) {
 			if (outputs_timers[i]) {
 				outputs_timers[i] -= 1;
 			}
-		}
+		}*/
 	}
 	uint8_t output = 0;
 	bool i_output;
 	for (int i = 0; i < output_num; i++) {
 		output <<= 1;
-		if (outputs_timers[i]) {
+		/*if (outputs_timers[i]) {
 			i_output = outputs_timers_powers[i] <= phase;
-		} else {
+		} else {*/
 			i_output = outputs[i] <= phase;
-		}
+		//}
 		if (i_output) output |= 1;
 	}
 	PORTC = output;

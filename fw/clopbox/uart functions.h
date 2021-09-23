@@ -17,6 +17,7 @@ typedef enum {
 	
 	ufResetOutputs = 0x10,
 	ufSetOutput = 0x12,
+	ufSetOutputs = 0x14,
 	ufGetOutputs = 0x15,
 	ufSetOutputWithTimeout = 0x16,
 	
@@ -27,7 +28,7 @@ typedef struct {
 	fUARTFunction callback;
 } tUARTCommandItem;
 
-#define UART_FUNCTIONS_NUMBER 6
+#define UART_FUNCTIONS_NUMBER 7
 extern const tUARTCommandItem UARTFunctions[UART_FUNCTIONS_NUMBER];
 
 #endif /* UART_FUNCTIONS_H_ */

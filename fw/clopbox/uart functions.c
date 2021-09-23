@@ -7,6 +7,7 @@
 
 #include <avr/pgmspace.h>
 #include <stddef.h> // for NULL
+#include <string.h>
 #include "uart functions.h"
 #include "uart protocol.h"
 #include "data.h"
@@ -43,6 +44,15 @@ uint8_t getOutputs(const uint8_t *payload, const uint8_t payloadSize, uint8_t *r
 	return eucOk;
 }
 
+uint8_t setOutputs(const uint8_t *payload, const uint8_t payloadSize, uint8_t *response, uint8_t *responseSize) {
+	if (output_num != payloadSize) return eucArgumentValidationError;
+	for (int i = 0; i < output_num; i++) {
+		if (MAX_POWER <= payload[i]) return eucArgumentValidationError;
+	}
+	memcpy(outputs, payload, sizeof(outputs[0]) * output_num);
+	return eucOk;
+}
+
 uint8_t setOutputWithTimeout(const uint8_t *payload, const uint8_t payloadSize, uint8_t *response, uint8_t *responseSize) {
 	// 0th is output number
 	// 1st is power
@@ -62,6 +72,7 @@ const PROGMEM tUARTCommandItem UARTFunctions[UART_FUNCTIONS_NUMBER] = {
 	{ ufVersion, NULL },
 	{ ufResetOutputs, &resetOutputs },
 	{ ufSetOutput, &setOutput },
+	{ ufSetOutputs, &setOutputs },
 	{ ufGetOutputs, &getOutputs },
 	{ ufSetOutputWithTimeout, &setOutputWithTimeout },
 };
