@@ -9,6 +9,7 @@ HwOutput::HwOutput(QObject *parent, const float powerFactor, const float startTi
 
 }
 
+/// @result raw power level at current step
 int HwOutput::calculateNextStep(const TTime timePassed)
 {
     this->apiMutex.lock();
@@ -36,9 +37,22 @@ int HwOutput::calculateNextStep(const TTime timePassed)
     return ret;
 }
 
-void HwOutput::setPower(const TPower power)
+void HwOutput::setRawPower(const TPower power)
 {
     this->apiMutex.lock();
     this->targetPower = power;
     this->apiMutex.unlock();
+}
+
+TPower HwOutput::currentRawPower()
+{
+    return this->currentPower;
+}
+
+/// @arg power [0:1]
+void HwOutput::setPower(float power)
+{
+    if (0 > power) power = 0;
+    if (1 < power) power = 1;
+    this->setRawPower(power * this->powerFactor * this->maxPower);
 }

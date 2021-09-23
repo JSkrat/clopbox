@@ -8,6 +8,9 @@
 typedef qint64 TTime; // milliseconds
 typedef int TPower;
 
+/// output generator
+/// generates start impulses
+/// generates waves
 class HwOutput : public QObject
 {
     Q_OBJECT
@@ -16,17 +19,21 @@ class HwOutput : public QObject
     TTime startupTimeout; // for how long should we keep startup level of power
     QMutex apiMutex;
 public:
+    const TPower maxPower = 255;
     const float powerFactor;
     const TTime startTime;
     const TPower startPower; // engine starts rotating from all the positions at that power
     const TPower minimalPower; // below that engine stops
-    explicit HwOutput(QObject *parent = nullptr, const float powerFactor, const float startTime, const TPower startPower, const TPower minimalPower);
+    explicit HwOutput(QObject *parent, const float powerFactor, const float startTime, const TPower startPower, const TPower minimalPower);
 
+    /// main output, called when host is ready to send our new value to the device
     int calculateNextStep(const TTime timePassed);
     /// low-level function to set the output power.
     /// using this we can forget about output startup sequence
     /// does not cause any side effects, for example startup sequence starts at next calculation
-    void setPower(const TPower power);
+    void setRawPower(const TPower power);
+    TPower currentRawPower();
+    void setPower(float power);
 
 signals:
 
