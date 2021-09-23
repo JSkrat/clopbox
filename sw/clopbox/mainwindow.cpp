@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QObject>
 #include <QSlider>
+#include "hwcontrol.h"
 
 typedef enum {
     eucOk = 0,

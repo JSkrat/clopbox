@@ -6,15 +6,7 @@
 #include <QSlider>
 #include <QProgressBar>
 #include "serialthread.h"
-
-typedef enum {
-    ufEcho = 0,
-    ufVersion = 1,
-
-    ufResetOutputs = 0x10,
-    ufSetOutput = 0x12,
-    ufGetOutputs = 0x15,
-} eUARTFunction;
+#include "hwcontrol.h"
 
 typedef struct {
     QSlider *slider;
