@@ -19,7 +19,7 @@ class HwOutput : public QObject
     TTime startupTimeout; // for how long should we keep startup level of power
     QMutex apiMutex;
 public:
-    const TPower maxPower = 255;
+    const TPower maxPower = 64;
     const float powerFactor;
     const TTime startTime;
     const TPower startPower; // engine starts rotating from all the positions at that power
@@ -34,7 +34,8 @@ public:
     void setRawPower(const TPower power);
     TPower getRawPower();
     void setPower(float power);
-    TPower getPower();
+    float getPower();
+    float parsePower(TPower hwPower);
 
 signals:
 

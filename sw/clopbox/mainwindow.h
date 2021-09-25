@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QSlider>
 #include <QProgressBar>
+#include <QLabel>
 #include "serialthread.h"
 #include "hwcontrol.h"
 
@@ -28,16 +29,17 @@ public:
 
 public slots:
     void sliderMoved(int index);
-    void updateOutputsTimeout();
+    void updateUITimeout();
 
 private:
     const float uiOutputMultiplier;
     Ui::MainWindow *ui;
     const QString title;
-    QTimer updateOutputs;
+    QTimer updateUI;
     tOutput outputs[8];
     HwControl *control;
     void createLayout();
+    QLabel *statusQueueLen;
 };
 
 #endif // MAINWINDOW_H

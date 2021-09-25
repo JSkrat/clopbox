@@ -26,7 +26,7 @@ typedef struct {
     /// the least sent to the device value
     TPower lastOutput;
     /// the least read from the device value
-    TPower hwOutput;
+    float hwOutput;
     HwOutput *output;
 } sOutput;
 
@@ -40,6 +40,7 @@ class HwControl : public QObject
     QElapsedTimer _outputUpdateTime;
 
     void _validateOutputNumber(int outputNumber);
+    void _serialTransaction(eUARTFunction command, QByteArray data);
 public:
     QString portName;
     int uartTimeout;
@@ -50,8 +51,8 @@ public:
     void setOutput(int outputNumber, float power);
     QString getName(int outputNumber);
     float getDeviceOutput(int outputNumber);
+    int getQueueLength();
 
-    void serialTransaction(eUARTFunction command, QByteArray data);
 signals:
 
 public slots:

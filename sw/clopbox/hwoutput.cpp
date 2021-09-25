@@ -15,20 +15,32 @@ int HwOutput::calculateNextStep(const TTime timePassed)
     this->apiMutex.lock();
     TTime ret = 0;
     // if startup timer is already going
-    if (0 != this->startupTimeout) {
-        this->startupTimeout -= timePassed;
-        if (0 < this->startupTimeout) {
-            ret = this->startPower;
-        } else {
+    if (0 < this->startupTimeout) {
+        if (this->startPower < this->targetPower) {
+            // if startup timer is going, but now target is bigger than startup power, then stop it
+            this->startupTimeout = 0;
             ret = this->targetPower;
+        } else {
+            // normal startup sequence
+            this->startupTimeout -= timePassed;
+            if (0 < this->startupTimeout) {
+                ret = this->startPower;
+            } else {
+                ret = this->targetPower;
+            }
         }
     } else {
-        // if we were less than minimal, but now we need more than minimal
-        if (this->minimalPower >= this->currentPower && this->minimalPower < this->targetPower) {
+        // if we were less than minimal, but now we need less that startup power
+        if (
+            this->minimalPower >= this->currentPower
+                && this->startPower > this->targetPower
+                && this->minimalPower < this->targetPower
+        ) {
             // initiate startup sequence
             this->startupTimeout = this->startTime;
             ret = this->startPower;
         } else {
+            // normal operation, just mirror the target
             ret = this->targetPower;
         }
     }
@@ -49,15 +61,21 @@ TPower HwOutput::getRawPower()
     return this->currentPower;
 }
 
-/// @arg power [0:1]
+/// @arg power [0:1)
 void HwOutput::setPower(float power)
 {
     if (0 > power) power = 0;
-    if (1 < power) power = 1;
-    this->setRawPower(power * this->powerFactor * this->maxPower);
+    TPower rawPower = power * this->powerFactor * this->maxPower;
+    if (this->maxPower <= rawPower) rawPower = this->maxPower-1;
+    this->setRawPower(rawPower);
 }
 
-TPower HwOutput::getPower()
+float HwOutput::getPower()
 {
-    return this->currentPower / this->powerFactor;
+    return this->parsePower(this->currentPower);
+}
+
+float HwOutput::parsePower(TPower hwPower)
+{
+    return hwPower / this->powerFactor / this->maxPower;
 }

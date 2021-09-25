@@ -20,7 +20,7 @@ void HwControl::_validateOutputNumber(int outputNumber)
 }
 
 HwControl::HwControl(QObject *parent, QString mappingFile, QString port) :
-    QObject(parent), serial(this), portName(port), uartTimeout(20), uartErrors(0), uartTimeouts(0)
+    QObject(parent), serial(this), portName(port), uartTimeout(4), uartErrors(0), uartTimeouts(0)
 {
     qRegisterMetaType<uint8_t>("uint8_t");
     connect(&(this->serial), &SerialThread::response, this, &HwControl::serialResponse);
@@ -67,7 +67,7 @@ HwControl::HwControl(QObject *parent, QString mappingFile, QString port) :
 float HwControl::getOutput(int outputNumber)
 {
     this->_validateOutputNumber(outputNumber);
-    return static_cast<float>(this->_outputs[outputNumber].output->getPower());
+    return this->_outputs[outputNumber].output->getPower();
 }
 
 void HwControl::setOutput(int outputNumber, float power)
@@ -82,24 +82,33 @@ QString HwControl::getName(int outputNumber)
     return this->_outputs[outputNumber].name;
 }
 
-/// returns the real value from the device
+/// returns the real value from the device, [0:1]
 float HwControl::getDeviceOutput(int outputNumber)
 {
     this->_validateOutputNumber(outputNumber);
-    return this->_outputs[outputNumber].hwOutput / this->_outputs[outputNumber].output->powerFactor;
+    return this->_outputs[outputNumber].hwOutput;
+}
+
+int HwControl::getQueueLength()
+{
+    return this->serial.getQueueSize();
 }
 
 void HwControl::serialResponse(const uint8_t command, const uint8_t code, const QByteArray &response)
 {
     eUARTFunction eCommand = static_cast<eUARTFunction>(command);
     if (0 != code) {
-        std::cerr << "HwControl::serialResponse not good code " << code << " command " << command << std::endl;
+        std::cerr << "HwControl::serialResponse not good code "
+                  << static_cast<int>(code)
+                  << " command "
+                  << static_cast<int>(command)
+                  << std::endl;
     }
     switch (eCommand) {
     case ufGetOutputs: {
         if (8 != response.length()) return;
         for (int i = 0; i < response.length(); i++) {
-            this->_outputs[i].hwOutput = response[i];
+            this->_outputs[i].hwOutput = this->_outputs[i].output->parsePower(response[i]);
         }
         break;
     }
@@ -138,16 +147,17 @@ void HwControl::outputUpdate()
 {
     // command length is 12 bytes, it is 120 bits, it is 1.042ms@115200
     QByteArray outputs;
+    const TTime timePassed = this->_outputUpdateTime.restart();
     for (int i = 0; i < OUTPUT_NUM; i++) {
-        TPower output = this->_outputs[i].output->calculateNextStep(this->_outputUpdateTime.restart());
+        TPower output = this->_outputs[i].output->calculateNextStep(timePassed);
         outputs.append(output);
         this->_outputs[i].lastOutput = output;
     }
-    this->serialTransaction(ufSetOutputs, outputs);
-    this->serialTransaction(ufGetOutputs, {});
+    this->_serialTransaction(ufSetOutputs, outputs);
+    this->_serialTransaction(ufGetOutputs, {});
 }
 
-void HwControl::serialTransaction(eUARTFunction command, QByteArray data)
+void HwControl::_serialTransaction(eUARTFunction command, QByteArray data)
 {
     data.prepend(command);
     this->serial.transaction(this->portName, this->uartTimeout, data);

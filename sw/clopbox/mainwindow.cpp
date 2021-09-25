@@ -19,12 +19,14 @@ typedef enum {
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    uiOutputMultiplier(100),
+    uiOutputMultiplier(64),
     ui(new Ui::MainWindow),
     title("Clopbox 8"),
-    updateOutputs(this)
+    updateUI(this),
+    statusQueueLen(new QLabel)
 {
-    ui->setupUi(this);
+    this->ui->setupUi(this);
+    this->ui->statusBar->addPermanentWidget(this->statusQueueLen);
     this->control = new HwControl(this, "outputs.json", "COM6");
     // init manual controls
     for (int i = 0; i < OUTPUT_NUM; i++) {
@@ -37,7 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
         this->outputs[i].bar->setMaximum(this->uiOutputMultiplier-1);
     }
     this->createLayout();
-    connect(&this->updateOutputs, &QTimer::timeout, this, &MainWindow::updateOutputsTimeout);
+    connect(&this->updateUI, &QTimer::timeout, this, &MainWindow::updateUITimeout);
+    this->updateUI.start(50);
 }
 
 void MainWindow::createLayout() {
@@ -62,11 +65,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::sliderMoved(int index)
 {
-    this->control->setOutput(index, this->outputs[index].slider->value());
+    this->control->setOutput(index, this->outputs[index].slider->value() / this->uiOutputMultiplier);
 }
 
-void MainWindow::updateOutputsTimeout()
+void MainWindow::updateUITimeout()
 {
+    this->statusQueueLen->setText(QString("cereal %1").arg(this->control->getQueueLength()));
     for (int i = 0; i < OUTPUT_NUM; i++) {
         this->outputs[i].bar->setValue(this->control->getDeviceOutput(i) * this->uiOutputMultiplier);
     }
