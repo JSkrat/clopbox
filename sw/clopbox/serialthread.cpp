@@ -95,12 +95,18 @@ void SerialThread::run()
                     this->parseByte(static_cast<uint8_t>(c));
                 }
             } else {
-                emit this->timeout(tr("Wait read response timeout %1")
-                             .arg(QTime::currentTime().toString()));
+                emit this->timeout(
+                            tr("%1 Wait read response timeout, command %2")
+                            .arg(QTime::currentTime().toString())
+                            .arg(QString(msg->request.toHex(' ')))
+                );
             }
         } else {
-            emit this->timeout(tr("Wait write request timeout %1")
-                         .arg(QTime::currentTime().toString()));
+            emit this->timeout(
+                        tr("%1 Wait write request timeout %2")
+                        .arg(QTime::currentTime().toString())
+                        .arg(QString(msg->request.toHex(' ')))
+            );
         }
         this->syncDequeue();
     }

@@ -44,7 +44,7 @@ void HwOutput::setRawPower(const TPower power)
     this->apiMutex.unlock();
 }
 
-TPower HwOutput::currentRawPower()
+TPower HwOutput::getRawPower()
 {
     return this->currentPower;
 }
@@ -55,4 +55,9 @@ void HwOutput::setPower(float power)
     if (0 > power) power = 0;
     if (1 < power) power = 1;
     this->setRawPower(power * this->powerFactor * this->maxPower);
+}
+
+TPower HwOutput::getPower()
+{
+    return this->currentPower / this->powerFactor;
 }

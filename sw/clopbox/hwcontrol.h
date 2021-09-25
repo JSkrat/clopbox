@@ -42,11 +42,14 @@ class HwControl : public QObject
     void _validateOutputNumber(int outputNumber);
 public:
     QString portName;
-    int uartTimeout = 20;
-    explicit HwControl(QObject *parent = nullptr);
+    int uartTimeout;
+    int uartErrors, uartTimeouts;
+    explicit HwControl(QObject *parent, QString mappingFile, QString port);
 
     float getOutput(int outputNumber);
     void setOutput(int outputNumber, float power);
+    QString getName(int outputNumber);
+    float getDeviceOutput(int outputNumber);
 
     void serialTransaction(eUARTFunction command, QByteArray data);
 signals:

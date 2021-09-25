@@ -19,13 +19,14 @@ void HwControl::_validateOutputNumber(int outputNumber)
     if (OUTPUT_NUM <= outputNumber) throw LogException(error, QString("output can not be bigger than %1 (%2)").arg(OUTPUT_NUM).arg(outputNumber));
 }
 
-HwControl::HwControl(QObject *parent) : QObject(parent), serial(this)
+HwControl::HwControl(QObject *parent, QString mappingFile, QString port) :
+    QObject(parent), serial(this), portName(port), uartTimeout(20), uartErrors(0), uartTimeouts(0)
 {
     qRegisterMetaType<uint8_t>("uint8_t");
     connect(&(this->serial), &SerialThread::response, this, &HwControl::serialResponse);
     connect(&(this->serial), &SerialThread::timeout, this, &HwControl::serialTimeout);
     connect(&(this->serial), &SerialThread::error, this, &HwControl::serialError);
-    QFile outputsConfig("outputs.json");
+    QFile outputsConfig(mappingFile);
     if (!outputsConfig.open(QIODevice::ReadOnly)) {
         std::cerr << QString("Retrieving driver mapping QFile error: %1").arg(outputsConfig.errorString()).toStdString().c_str();
         QCoreApplication::exit(outputsConfig.error());
@@ -60,13 +61,13 @@ HwControl::HwControl(QObject *parent) : QObject(parent), serial(this)
     // one period of the device is 64ms, but to avoid interference patters let's peek couple times smaller
     this->_outputUpdateTimer.setInterval(16);
     connect(&(this->_outputUpdateTimer), &QTimer::timeout, this, &HwControl::outputUpdate);
+    this->_outputUpdateTimer.start();
 }
 
 float HwControl::getOutput(int outputNumber)
 {
     this->_validateOutputNumber(outputNumber);
-    return static_cast<float>(this->_outputs[outputNumber].output->currentRawPower()) /
-            this->_outputs[outputNumber].output->powerFactor;
+    return static_cast<float>(this->_outputs[outputNumber].output->getPower());
 }
 
 void HwControl::setOutput(int outputNumber, float power)
@@ -75,9 +76,25 @@ void HwControl::setOutput(int outputNumber, float power)
     this->_outputs[outputNumber].output->setPower(power);
 }
 
+QString HwControl::getName(int outputNumber)
+{
+    this->_validateOutputNumber(outputNumber);
+    return this->_outputs[outputNumber].name;
+}
+
+/// returns the real value from the device
+float HwControl::getDeviceOutput(int outputNumber)
+{
+    this->_validateOutputNumber(outputNumber);
+    return this->_outputs[outputNumber].hwOutput / this->_outputs[outputNumber].output->powerFactor;
+}
+
 void HwControl::serialResponse(const uint8_t command, const uint8_t code, const QByteArray &response)
 {
     eUARTFunction eCommand = static_cast<eUARTFunction>(command);
+    if (0 != code) {
+        std::cerr << "HwControl::serialResponse not good code " << code << " command " << command << std::endl;
+    }
     switch (eCommand) {
     case ufGetOutputs: {
         if (8 != response.length()) return;
@@ -107,12 +124,14 @@ void HwControl::serialResponse(const uint8_t command, const uint8_t code, const 
 
 void HwControl::serialTimeout(const QString &message)
 {
-
+    std::cerr << "HwControl::serialTimeout " << message.toStdString() << std::endl;
+    this->uartTimeouts++;
 }
 
 void HwControl::serialError(const QString &message)
 {
-
+    std::cerr << "HwControl::serialError " << message.toStdString() << std::endl;
+    this->uartErrors++;
 }
 
 void HwControl::outputUpdate()
@@ -125,6 +144,7 @@ void HwControl::outputUpdate()
         this->_outputs[i].lastOutput = output;
     }
     this->serialTransaction(ufSetOutputs, outputs);
+    this->serialTransaction(ufGetOutputs, {});
 }
 
 void HwControl::serialTransaction(eUARTFunction command, QByteArray data)

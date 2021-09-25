@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include <QObject>
 #include <QSlider>
+#include <QProgressBar>
+#include <QStyleOptionGroupBox>
 #include "hwcontrol.h"
 
 typedef enum {
@@ -17,40 +19,40 @@ typedef enum {
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+    uiOutputMultiplier(100),
     ui(new Ui::MainWindow),
-//    serial(this),
-    uartUpdateTimer(this),
-    title("Clopbox 8")
+    title("Clopbox 8"),
+    updateOutputs(this)
 {
     ui->setupUi(this);
-    // init output array
-    this->outputs[0].slider = this->ui->verticalSlider_0;
-    this->outputs[1].slider = this->ui->verticalSlider_1;
-    this->outputs[2].slider = this->ui->verticalSlider_2;
-    this->outputs[3].slider = this->ui->verticalSlider_3;
-    this->outputs[4].slider = this->ui->verticalSlider_4;
-    this->outputs[5].slider = this->ui->verticalSlider_5;
-    this->outputs[6].slider = this->ui->verticalSlider_6;
-    this->outputs[7].slider = this->ui->verticalSlider_7;
-    this->outputs[0].bar = this->ui->progressBar_0;
-    this->outputs[1].bar = this->ui->progressBar_1;
-    this->outputs[2].bar = this->ui->progressBar_2;
-    this->outputs[3].bar = this->ui->progressBar_3;
-    this->outputs[4].bar = this->ui->progressBar_4;
-    this->outputs[5].bar = this->ui->progressBar_5;
-    this->outputs[6].bar = this->ui->progressBar_6;
-    this->outputs[7].bar = this->ui->progressBar_7;
-    for (int i = 0; i < 8; i++) {
+    this->control = new HwControl(this, "outputs.json", "COM6");
+    // init manual controls
+    for (int i = 0; i < OUTPUT_NUM; i++) {
+        this->outputs[i].slider = new QSlider(this);
         this->outputs[i].slider->setMinimum(0);
-        this->outputs[i].slider->setMaximum(63);
-        connect(this->outputs[i].slider, &QSlider::valueChanged, this, &MainWindow::sliderMoved);
+        this->outputs[i].slider->setMaximum(this->uiOutputMultiplier-1);
+        connect(this->outputs[i].slider, &QSlider::valueChanged, [=]() { MainWindow::sliderMoved(i); });
+        this->outputs[i].bar = new QProgressBar(this);
         this->outputs[i].bar->setMinimum(0);
-        this->outputs[i].bar->setMaximum(63);
+        this->outputs[i].bar->setMaximum(this->uiOutputMultiplier-1);
     }
-    // update timer init --- to read data from the device
-    this->uartUpdateTimer.setInterval(50);
-    connect(&this->uartUpdateTimer, &QTimer::timeout, this, &MainWindow::statusUpdate);
-    this->uartUpdateTimer.start();
+    this->createLayout();
+    connect(&this->updateOutputs, &QTimer::timeout, this, &MainWindow::updateOutputsTimeout);
+}
+
+void MainWindow::createLayout() {
+    for (int i = 0; i < OUTPUT_NUM; i++) {
+        QGroupBox *output = new QGroupBox(this->control->getName(i), this->ui->manualControl);
+        output->setFlat(true);
+        QLayout *outputLayout = new QHBoxLayout(output);
+        outputLayout->setContentsMargins(0, 13, 0, 13);
+        output->setLayout(outputLayout);
+        this->outputs[i].bar->setOrientation(Qt::Orientation::Vertical);
+        outputLayout->addWidget(this->outputs[i].bar);
+        this->outputs[i].slider->setOrientation(Qt::Orientation::Vertical);
+        outputLayout->addWidget(this->outputs[i].slider);
+        this->ui->manualControl->layout()->addWidget(output);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -58,53 +60,14 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::statusUpdate()
+void MainWindow::sliderMoved(int index)
 {
-    this->serialTransaction(ufGetOutputs, {});
+    this->control->setOutput(index, this->outputs[index].slider->value());
 }
 
-void MainWindow::serialResponse(const uint8_t command, const uint8_t code, const QByteArray &response) {
-    eUARTFunction eCommand = static_cast<eUARTFunction>(command);
-    switch (eCommand) {
-    case ufGetOutputs: {
-        if (8 != response.length()) return;
-        for (int i = 0; i < response.length(); i++) {
-            this->outputs[i].bar->setValue(response[i]);
-        }
-        break;
-    }
-    case ufResetOutputs: {
-        break;
-    }
-    case ufSetOutput: {
-        break;
-    }
-    default: {
-        break;
-    }
-    }
-}
-
-void MainWindow::serialTimeout(const QString &message) {
-    this->uartTimeouts++;
-}
-
-void MainWindow::serialError(const QString &message) {
-    this->uartErrors++;
-}
-
-void MainWindow::sliderMoved(int position)
+void MainWindow::updateOutputsTimeout()
 {
-    for (int i = 0; i < 8; i++) {
-        QByteArray cmd;
-        cmd.append(static_cast<char>(i));
-        cmd.append(static_cast<char>(outputs[i].slider->value()));
-        this->serialTransaction(ufSetOutput, cmd);
+    for (int i = 0; i < OUTPUT_NUM; i++) {
+        this->outputs[i].bar->setValue(this->control->getDeviceOutput(i) * this->uiOutputMultiplier);
     }
-}
-
-void MainWindow::serialTransaction(eUARTFunction command, QByteArray data)
-{
-    data.prepend(command);
-    this->serial.transaction(this->portName, this->uartTimeout, data);
 }

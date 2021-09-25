@@ -9,6 +9,7 @@
 #include "hwcontrol.h"
 
 typedef struct {
+    QString name;
     QSlider *slider;
     QProgressBar *bar;
 } tOutput;
@@ -26,26 +27,17 @@ public:
     ~MainWindow();
 
 public slots:
-    void statusUpdate();
-    void serialResponse(const uint8_t command, const uint8_t code, const QByteArray &response);
-    void serialTimeout(const QString &message);
-    void serialError(const QString &message);
-    void sliderMoved(int position);
-
+    void sliderMoved(int index);
+    void updateOutputsTimeout();
 
 private:
+    const float uiOutputMultiplier;
     Ui::MainWindow *ui;
-    SerialThread serial;
-    QTimer uartUpdateTimer;
     const QString title;
-
-    int uartErrors = 0;
-    int uartTimeouts = 0;
-    int uartTimeout = 20;
-    QString portName = "COM12";
+    QTimer updateOutputs;
     tOutput outputs[8];
-
-    void serialTransaction(eUARTFunction command, QByteArray data);
+    HwControl *control;
+    void createLayout();
 };
 
 #endif // MAINWINDOW_H

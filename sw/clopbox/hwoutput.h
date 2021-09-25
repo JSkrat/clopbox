@@ -32,8 +32,9 @@ public:
     /// using this we can forget about output startup sequence
     /// does not cause any side effects, for example startup sequence starts at next calculation
     void setRawPower(const TPower power);
-    TPower currentRawPower();
+    TPower getRawPower();
     void setPower(float power);
+    TPower getPower();
 
 signals:
 
