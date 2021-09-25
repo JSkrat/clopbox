@@ -31,7 +31,7 @@ uint8_t setOutput(const uint8_t *payload, const uint8_t payloadSize, uint8_t *re
 	// validation
 	if (2 != payloadSize) return eucArgumentValidationError;
 	if (output_num <= payload[0]) return eucArgumentValidationError;
-	if (MAX_POWER <= payload[1]) return eucArgumentValidationError;
+	if (MAX_POWER < payload[1]) return eucArgumentValidationError;
 	outputs[payload[0]] = payload[1];
 	return eucOk;
 }
@@ -47,7 +47,7 @@ uint8_t getOutputs(const uint8_t *payload, const uint8_t payloadSize, uint8_t *r
 uint8_t setOutputs(const uint8_t *payload, const uint8_t payloadSize, uint8_t *response, uint8_t *responseSize) {
 	if (output_num != payloadSize) return eucArgumentValidationError;
 	for (int i = 0; i < output_num; i++) {
-		if (MAX_POWER <= payload[i]) return eucArgumentValidationError;
+		if (MAX_POWER < payload[i]) return eucArgumentValidationError;
 	}
 	memcpy(outputs, payload, sizeof(outputs[0]) * output_num);
 	return eucOk;
@@ -61,7 +61,7 @@ uint8_t setOutputWithTimeout(const uint8_t *payload, const uint8_t payloadSize, 
 	// validation
 	if (4 != payloadSize) return eucArgumentValidationError;
 	if (output_num <= payload[0]) return eucArgumentValidationError;
-	if (MAX_POWER <= payload[1]) return eucArgumentValidationError;
+	if (MAX_POWER < payload[1]) return eucArgumentValidationError;
 	outputs_timers_powers[payload[0]] = payload[1];
 	outputs_timers[payload[0]] = (payload[3] << 8) + payload[2];
 	return eucOk;
