@@ -51,16 +51,16 @@
         "name": "6",
         "enabled": true,
         "power factor": 1.0,
-        "minimal power": 0,
-        "start power": 5,
+        "minimal power": 1,
+        "start power": 8,
         "start time": 0.1
     },
     {
         "name": "7",
         "enabled": true,
         "power factor": 1.0,
-        "minimal power": 0,
-        "start power": 5,
-        "start time": 0.1
+        "minimal power": 3,
+        "start power": 12,
+        "start time": 0.2
     }
 ]

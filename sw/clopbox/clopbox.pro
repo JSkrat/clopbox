@@ -29,14 +29,16 @@ SOURCES += \
         mainwindow.cpp \
     serialthread.cpp \
     hwcontrol.cpp \
-    hwoutput.cpp
+    hwoutput.cpp \
+    waveform.cpp
 
 HEADERS += \
         mainwindow.h \
     serialthread.h \
     hwcontrol.h \
     exceptions.h \
-    hwoutput.h
+    hwoutput.h \
+    waveform.h
 
 FORMS += \
         mainwindow.ui

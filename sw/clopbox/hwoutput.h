@@ -4,8 +4,8 @@
 #include <QObject>
 #include <QElapsedTimer>
 #include <QMutex>
+#include "waveform.h"
 
-typedef qint64 TTime; // milliseconds
 typedef int TPower;
 
 /// output generator

@@ -41,7 +41,7 @@ HwControl::HwControl(QObject *parent, QString mappingFile, QString port) :
             break;
         }
         QVariantMap output = outputJsonValue.toObject().toVariantMap();
-        std::cout << output["name"].toString().toStdString().c_str() << std::endl;
+        //std::cout << output["name"].toString().toStdString().c_str() << std::endl;
         this->_outputs[i] = {
             .name = output["name"].toString(),
             .enabled = output["enabled"].toBool(),

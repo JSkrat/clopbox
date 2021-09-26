@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
         this->outputs[i].bar = new QProgressBar(this);
         this->outputs[i].bar->setMinimum(0);
         this->outputs[i].bar->setMaximum(this->uiOutputMultiplier-1);
+        this->outputs[i].power = new QLabel(this);
     }
     this->createLayout();
     connect(&this->updateUI, &QTimer::timeout, this, &MainWindow::updateUITimeout);
@@ -47,13 +48,14 @@ void MainWindow::createLayout() {
     for (int i = 0; i < OUTPUT_NUM; i++) {
         QGroupBox *output = new QGroupBox(this->control->getName(i), this->ui->manualControl);
         output->setFlat(true);
-        QLayout *outputLayout = new QHBoxLayout(output);
+        QGridLayout *outputLayout = new QGridLayout(output);
         outputLayout->setContentsMargins(0, 13, 0, 13);
         output->setLayout(outputLayout);
+        outputLayout->addWidget(this->outputs[i].power, 0, 0);
         this->outputs[i].bar->setOrientation(Qt::Orientation::Vertical);
-        outputLayout->addWidget(this->outputs[i].bar);
+        outputLayout->addWidget(this->outputs[i].bar, 1, 0);
         this->outputs[i].slider->setOrientation(Qt::Orientation::Vertical);
-        outputLayout->addWidget(this->outputs[i].slider);
+        outputLayout->addWidget(this->outputs[i].slider, 1, 1);
         this->ui->manualControl->layout()->addWidget(output);
     }
 }
@@ -72,6 +74,8 @@ void MainWindow::updateUITimeout()
 {
     this->statusQueueLen->setText(QString("cereal %1").arg(this->control->getQueueLength()));
     for (int i = 0; i < OUTPUT_NUM; i++) {
-        this->outputs[i].bar->setValue(this->control->getDeviceOutput(i) * this->uiOutputMultiplier);
+        int value = this->control->getDeviceOutput(i) * this->uiOutputMultiplier;
+        this->outputs[i].bar->setValue(value);
+        this->outputs[i].power->setText(QString("%1").arg(value));
     }
 }

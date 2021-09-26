@@ -13,6 +13,7 @@ typedef struct {
     QString name;
     QSlider *slider;
     QProgressBar *bar;
+    QLabel *power;
 } tOutput;
 
 namespace Ui {
