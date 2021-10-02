@@ -1,0 +1,3 @@
+[submodule "3d-stuff"]
+	path = hw/3d-stuff
+	url = git@github.com:JSkrat/3d-stuff.git
