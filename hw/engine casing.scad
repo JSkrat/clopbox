@@ -28,18 +28,26 @@ module casing() {
         translate([0, 0, toy_engine_h_below + wall])
         toy_engine(false);
         // space for wires
-        wire_w = 16.9;
+        wire_w = 10;
         wire_d = 2.4;
-        wire_h = 3.2;
+        wire_h = 1.5;
         wire_diameter = 1.5 + clearance*2;
-        translate([-wire_w/2, -toy_engine_depth/2 - wire_d, wall])
+        // wire hole to the bottom side
+        translate([-wire_w/2, -toy_engine_depth/2 - wire_d, 4.1 - wire_h])
         cube([wire_w, wire_d, wire_h]);
         // hole for wires
         hull() {
             for (x = [-1, 1])
-                translate([wire_diameter/2*x, -toy_engine_depth/2 - wire_diameter/2, -t])
-                cylinder(d = wire_diameter, h = wall + t*2);
+                translate([wire_diameter/2*x, -toy_engine_depth/2 - wire_diameter/2 - 0.5, -t])
+                cylinder(d = wire_diameter, h = 4.1 - wire_h + t*2);
         }
+        // wire hole to the back side
+        /*rotate(90, [1, 0, 0])
+        hull() {
+            for (x = [-1, 1])
+                translate([wire_diameter/2*x, 7, 0])
+                cylinder(d = wire_diameter, h = toy_engine_depth);
+        }*/
         translate([0, 0, toy_engine_h_below + wall + toy_engine_head_h])
         cylinder(r = 9 + clearance, h = toy_engine_h_above - toy_engine_head_h);
     }
@@ -50,7 +58,7 @@ module casing() {
     //mirror([0, 1, 0])
     *translate([-100, 0, 0])
     cube([200, 200, 200]);
-    translate([-100, -100, 8])
+    translate([-100, -100, 9.8])
     cube([200, 200, 200]);
 }
 
