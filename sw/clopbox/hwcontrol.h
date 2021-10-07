@@ -6,6 +6,7 @@
 #include <QTime>
 #include <QTimer>
 #include "hwoutput.h"
+#include "waveform.h"
 
 #define OUTPUT_NUM 8
 
@@ -28,6 +29,7 @@ typedef struct {
     /// the least read from the device value
     float hwOutput;
     HwOutput *output;
+    WaveForm *generator;
 } sOutput;
 
 /// constantly updates outputs via uart from the HwOutput objects
@@ -49,6 +51,7 @@ public:
 
     float getOutput(int outputNumber);
     void setOutput(int outputNumber, float power);
+    WaveForm *generator(int output);
     QString getName(int outputNumber);
     float getDeviceOutput(int outputNumber);
     int getQueueLength();

@@ -11,6 +11,7 @@
 #include <QVariant>
 #include "exceptions.h"
 #include "hwoutput.h"
+#include "waveform.h"
 
 
 void HwControl::_validateOutputNumber(int outputNumber)
@@ -53,7 +54,8 @@ HwControl::HwControl(QObject *parent, QString mappingFile, QString port) :
                 output["start time"].toFloat(),
                 output["start power"].toInt(),
                 output["minimal power"].toInt()
-            )
+            ),
+            .generator = new WaveForm(),
         };
         i++;
     }
@@ -74,6 +76,12 @@ void HwControl::setOutput(int outputNumber, float power)
 {
     this->_validateOutputNumber(outputNumber);
     this->_outputs[outputNumber].output->setPower(power);
+}
+
+WaveForm *HwControl::generator(int output)
+{
+    this->_validateOutputNumber(output);
+    return this->_outputs[output].generator;
 }
 
 QString HwControl::getName(int outputNumber)
@@ -149,6 +157,9 @@ void HwControl::outputUpdate()
     QByteArray outputs;
     const TTime timePassed = this->_outputUpdateTime.restart();
     for (int i = 0; i < OUTPUT_NUM; i++) {
+        this->_outputs[i].output->setPower(
+            this->_outputs[i].generator->calculateNextStep(timePassed)
+        );
         TPower output = this->_outputs[i].output->calculateNextStep(timePassed);
         outputs.append(output);
         this->_outputs[i].lastOutput = output;

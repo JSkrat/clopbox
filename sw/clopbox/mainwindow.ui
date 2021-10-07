@@ -23,14 +23,6 @@
       <layout class="QHBoxLayout" name="horizontalLayout"/>
      </widget>
     </item>
-    <item>
-     <widget class="QGroupBox" name="waveControl">
-      <property name="title">
-       <string>Wave control</string>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_3"/>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">

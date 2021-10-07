@@ -6,14 +6,16 @@
 #include <QSlider>
 #include <QProgressBar>
 #include <QLabel>
+#include <QComboBox>
 #include "serialthread.h"
 #include "hwcontrol.h"
 
 typedef struct {
     QString name;
-    QSlider *slider;
+    QSlider *sliderMin, *sliderMax, *sliderPeriod, *sliderParameter;
     QProgressBar *bar;
     QLabel *power;
+    QComboBox *waveform;
 } tOutput;
 
 namespace Ui {
@@ -39,8 +41,9 @@ private:
     QTimer updateUI;
     tOutput outputs[8];
     HwControl *control;
-    void createLayout();
     QLabel *statusQueueLen;
+    void createLayout();
+    void updateOutputMinMaxSlider(int i);
 };
 
 #endif // MAINWINDOW_H
