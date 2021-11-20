@@ -15,6 +15,7 @@ const QMap<eWaveForm, QString> waveFormNames = {
 float WaveForm::circleSmoothing(float power)
 {
     // see activation function.odt for the formula meaning
+    // TODO check graph form when r < 1
     float x = power;
     float r = this->parameter * 50; // parameter is 0 to 1, radius can't be less than 1
     float x1 = 0.5 * sqrt(2*r*r - 1) - 0.5;

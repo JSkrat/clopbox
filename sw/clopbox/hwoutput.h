@@ -19,11 +19,14 @@ class HwOutput : public QObject
     TTime startupTimeout; // for how long should we keep startup level of power
     QMutex apiMutex;
 public:
+    /// maximum power value of the output, protocol defined
     const TPower maxPower = 64;
     const float powerFactor;
     const TTime startTime;
-    const TPower startPower; // engine starts rotating from all the positions at that power
-    const TPower minimalPower; // below that engine stops
+    /// engine starts rotating from all the positions at that power
+    const TPower startPower;
+    /// below that engine stops by itself
+    const TPower minimalPower;
     explicit HwOutput(QObject *parent, const float powerFactor, const float startTime, const TPower startPower, const TPower minimalPower);
 
     /// main output, called when host is ready to send our new value to the device
